@@ -42,7 +42,7 @@ void main() {
     test('non-broadcast stream', () {
       final emptyStream = Stream.fromIterable([0]).mapPerEvent((event) => null);
       expect(
-        () => emptyStream..listen((value) => null)..listen((value) => null),
+        () => emptyStream..listen(((value) => null))..listen(((value) => null)),
         throwsA(const TypeMatcher<StateError>()),
       );
     });
@@ -105,17 +105,17 @@ void main() {
 
   group('StreamWithValue.map extension', () {
     test('relays loaded and value', () async {
-      final swv = StreamWithLatestValue(Stream.fromIterable([1, 2, 3])),
+      final swv = StreamWithLatestValue<int>(Stream.fromIterable([1, 2, 3])),
           mapped = swv.map((x) => x + 1);
       expect(mapped.loaded, false);
 
       await swv.updates.first;
       expect(mapped.loaded, true);
-      expect(mapped.value, swv.value + 1);
+      expect(mapped.value, swv.value! + 1);
     });
 
     test('relays updates', () async {
-      final swv = StreamWithLatestValue(Stream.fromIterable([1, 2, 3])),
+      final swv = StreamWithLatestValue<int>(Stream.fromIterable([1, 2, 3])),
           mapped = swv.map((x) => x + 1);
       expect(await mapped.updates.toList(), [2, 3, 4]);
     });

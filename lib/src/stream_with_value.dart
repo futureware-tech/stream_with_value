@@ -1,7 +1,7 @@
 import 'dart:async';
 
 abstract class StreamWithValue<T> {
-  T get value;
+  T? get value;
   bool get loaded;
 
   /// Any changes to [value], in the form of a stream.
@@ -20,8 +20,8 @@ class _MappedStreamWithValue<TInput, TOutput>
   _MappedStreamWithValue(this._inputStream, this._convert);
 
   @override
-  TOutput get value =>
-      _inputStream.loaded ? _convert(_inputStream.value) : null;
+  TOutput? get value =>
+      _inputStream.loaded ? _convert(_inputStream.value!) : null;
   @override
   bool get loaded => _inputStream.loaded;
 
@@ -37,7 +37,7 @@ extension StreamWithValueExtensions<TInput> on StreamWithValue<TInput> {
   StreamWithValue<TOutput> map<TOutput>(_Converter<TInput, TOutput> convert) =>
       _MappedStreamWithValue(this, convert);
 
-  Stream<TInput> get valueWithUpdates async* {
+  Stream<TInput?> get valueWithUpdates async* {
     if (loaded) {
       yield value;
     }
@@ -48,8 +48,8 @@ extension StreamWithValueExtensions<TInput> on StreamWithValue<TInput> {
 extension MapPerEvent<TInput> on Stream<TInput> {
   /// Like [map], but calls [convert] once per event, and not per listener.
   Stream<TOutput> mapPerEvent<TOutput>(_Converter<TInput, TOutput> convert) {
-    StreamController<TOutput> controller;
-    StreamSubscription<TInput> subscription;
+    late StreamController<TOutput> controller;
+    late StreamSubscription<TInput> subscription;
 
     void onListen() {
       subscription = listen((event) => controller.add(convert(event)),
@@ -90,11 +90,11 @@ extension MapPerEvent<TInput> on Stream<TInput> {
 //    when passing value as initialData to StreamBuilder. Passing initialData
 //    if it's available is important to avoid unnecessary blinking.
 class StreamWithLatestValue<T> implements StreamWithValue<T> {
-  Stream<T> _stream;
+  late Stream<T> _stream;
   bool _hasLatestValue = false;
-  T _latestValue;
+  T? _latestValue;
 
-  StreamWithLatestValue(Stream<T> sourceStream, {T initialValue}) {
+  StreamWithLatestValue(Stream<T> sourceStream, {T? initialValue}) {
     if (initialValue != null) {
       _latestValue = initialValue;
       _hasLatestValue = true;
@@ -110,7 +110,7 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
   Stream<T> get updates => _stream;
 
   @override
-  T get value => _latestValue;
+  T? get value => _latestValue;
 
   @override
   bool get loaded => _hasLatestValue;
@@ -123,9 +123,9 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
 class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
   final _controller = StreamController<T>.broadcast();
   bool _hasLatestValue = false;
-  T _latestValue;
+  T? _latestValue;
 
-  PushStreamWithValue({T initialValue}) {
+  PushStreamWithValue({T? initialValue}) {
     if (initialValue != null) {
       _latestValue = initialValue;
       _hasLatestValue = true;
@@ -151,5 +151,5 @@ class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
   Stream<T> get updates => _controller.stream;
 
   @override
-  T get value => _latestValue;
+  T? get value => _latestValue;
 }

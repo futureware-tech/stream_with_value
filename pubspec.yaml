@@ -1,6 +1,6 @@
 name: fw_stream_with_value
 description: A package that handles a stream with the latest value.
-version: 0.0.1
+version: 0.0.2
 author: FutureWare LLC
 homepage: https://futurware.dev
 # TODO: delete before publishing.
@@ -9,7 +9,7 @@ homepage: https://futurware.dev
 publish_to: "none"
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
@@ -19,4 +19,4 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  test:
+  test: ^1.16.5

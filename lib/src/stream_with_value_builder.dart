@@ -6,8 +6,8 @@ import 'package:fw_stream_with_value/src/stream_with_value.dart';
 /// Build a [StreamBuilder] widget with values supplied from [StreamWithValue]
 /// object. DEPRECATED: use [StreamBuilderWithValue] widget instead.
 Widget buildStreamBuilderWithValue<T>({
-  @required StreamWithValue<T> streamWithValue,
-  @required AsyncWidgetBuilder<T> builder,
+  required StreamWithValue<T> streamWithValue,
+  required AsyncWidgetBuilder<T> builder,
 }) =>
     StreamBuilderWithValue<T>(
       streamWithValue: streamWithValue,
@@ -20,9 +20,9 @@ class StreamBuilderWithValue<T> extends StatefulWidget {
   final AsyncWidgetBuilder<T> builder;
 
   const StreamBuilderWithValue({
-    @required this.streamWithValue,
-    @required this.builder,
-    Key key,
+    required this.streamWithValue,
+    required this.builder,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -41,7 +41,7 @@ class _StreamBuilderWithValueState<T> extends State<StreamBuilderWithValue<T>> {
       );
 }
 
-typedef DataTrigger<T> = void Function(T newValue);
+typedef DataTrigger<T> = void Function(T? newValue);
 typedef DataBuilder<T> = Widget Function(BuildContext context, T value);
 typedef NullValueBuilder = Widget Function(BuildContext context);
 
@@ -59,13 +59,13 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
   final NullValueBuilder nullValueBuilder;
 
   /// Called for every change to the data. May be called with `null`.
-  final DataTrigger<T> onData;
+  final DataTrigger<T>? onData;
 
-  final Function(dynamic e, StackTrace stackTrace) onError;
+  final Function(dynamic e, StackTrace stackTrace)? onError;
 
   DataStreamWithValueBuilder({
-    @required this.streamWithValue,
-    @required this.builder,
+    required this.streamWithValue,
+    required this.builder,
     this.onData,
     this.nullValueBuilder = _noValueBuilder,
     this.onError,
@@ -78,8 +78,8 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
 
 class _DataStreamWithValueBuilderState<T>
     extends State<DataStreamWithValueBuilder<T>> {
-  StreamSubscription<T> _streamSubscription;
-  T _currentValue;
+  late StreamSubscription<T> _streamSubscription;
+  T? _currentValue;
 
   @override
   void initState() {
@@ -88,14 +88,14 @@ class _DataStreamWithValueBuilderState<T>
     if (widget.streamWithValue.loaded) {
       _currentValue = widget.streamWithValue.value;
       if (widget.onData != null) {
-        scheduleMicrotask(() => widget.onData(_currentValue));
+        scheduleMicrotask(() => widget.onData!(_currentValue));
       }
     }
 
     _streamSubscription = widget.streamWithValue.updates.listen((event) {
       if (mounted) {
         if (widget.onData != null) {
-          widget.onData(event);
+          widget.onData!(event);
         }
         setState(() {
           _currentValue = event;
@@ -125,6 +125,6 @@ class _DataStreamWithValueBuilderState<T>
   Widget build(BuildContext context) => widget.streamWithValue.loaded
       ? _currentValue == null
           ? widget.nullValueBuilder(context)
-          : widget.builder(context, _currentValue)
+          : widget.builder(context, _currentValue!)
       : _noValueBuilder(context);
 }
