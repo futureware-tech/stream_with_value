@@ -3,6 +3,10 @@ description: A package that handles a stream with the latest value.
 version: 0.0.1
 author: FutureWare LLC
 homepage: https://futurware.dev
+# TODO: delete before publishing.
+# Packages that use this package before publishing complain.
+# https://stackoverflow.com/questions/64660407/
+publish_to: "none"
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
