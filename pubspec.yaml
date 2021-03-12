@@ -1,7 +1,6 @@
 name: fw_stream_with_value
 description: A package that handles a stream with the latest value.
 version: 0.1.0
-author: FutureWare LLC
 homepage: https://futurware.dev
 
 environment:
