@@ -3,17 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:fw_stream_with_value/src/stream_with_value.dart';
 
-/// Build a [StreamBuilder] widget with values supplied from [StreamWithValue]
-/// object. DEPRECATED: use [StreamBuilderWithValue] widget instead.
-Widget buildStreamBuilderWithValue<T>({
-  required StreamWithValue<T> streamWithValue,
-  required AsyncWidgetBuilder<T> builder,
-}) =>
-    StreamBuilderWithValue<T>(
-      streamWithValue: streamWithValue,
-      builder: builder,
-    );
-
 @immutable
 class StreamBuilderWithValue<T> extends StatefulWidget {
   final StreamWithValue<T> streamWithValue;
