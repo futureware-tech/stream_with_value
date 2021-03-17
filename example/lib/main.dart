@@ -59,10 +59,10 @@ class _MyHomePageState extends State<MyHomePage> {
               const Text('StreamBuilderWithValue example'),
               StreamBuilderWithValue<int>(
                 streamWithValue: _streamWithValue,
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
                   return (snapshot.hasData)
                       ? Text(
-                          '${snapshot.data ?? 0}',
+                          '${snapshot.data}',
                           style: Theme.of(context).textTheme.headline4,
                         )
                       : CircularProgressIndicator();

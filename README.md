@@ -7,7 +7,7 @@ Stream and keeps the latest value that was received from it.
 
 **StreamWithLatestValue** - implementation that wraps a Stream and keeps the latest value that was received from it. The value **will not be** tracked if there are no listeners on updates.
 
-**PushStreamWithValue** - implementation that wraps a Stream and keeps the latest value that was received from it. The value **will be** tracked even if there are no listeners on updates.
+**PushStreamWithValue** - StreamWithValue implementation that creates a Stream from subsequent calls to add. This way, value is always set to the latest value that has been added, regardless of whether the updates are listened to (in contrast to StreamWithLatestValue).
 
 ## How to use
 
