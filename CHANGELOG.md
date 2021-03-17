@@ -1,7 +1,7 @@
 ## 0.1.0
 
-- Add example on how to use package
-- Update README with info oh how to use the package
+- Add example on how to use package.
+- Update README with info oh how to use the package.
 
 ## 0.0.2
 
