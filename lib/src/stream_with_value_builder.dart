@@ -50,7 +50,8 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
   /// Called for every change to the data. May be called with `null`.
   final DataTrigger<T>? onData;
 
-  final Function(dynamic e, StackTrace stackTrace)? onError;
+  /// Called when errors happen with the Stream
+  final void Function(dynamic e, StackTrace stackTrace)? onError;
 
   DataStreamWithValueBuilder({
     required this.streamWithValue,
@@ -94,14 +95,12 @@ class _DataStreamWithValueBuilderState<T>
       if (mounted) {
         Navigator.of(context).pop();
       }
-    }, onError: (
-      dynamic e,
-      // https://github.com/dart-lang/linter/issues/1099
-      // ignore: avoid_types_on_closure_parameters
-      StackTrace stackTrace,
-    ) {
-      widget.onError?.call(e, stackTrace);
-    });
+    },
+        onError: (
+          dynamic e,
+          StackTrace stackTrace,
+        ) =>
+            widget.onError?.call(e, stackTrace));
   }
 
   @override
