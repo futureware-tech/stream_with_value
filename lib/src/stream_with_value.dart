@@ -1,7 +1,7 @@
 import 'dart:async';
 
 abstract class StreamWithValue<T> {
-  T? get value;
+  T get value;
   bool get loaded;
 
   /// Any changes to [value], in the form of a stream.
@@ -20,8 +20,8 @@ class _MappedStreamWithValue<TInput, TOutput>
   _MappedStreamWithValue(this._inputStream, this._convert);
 
   @override
-  TOutput? get value =>
-      _inputStream.loaded ? _convert(_inputStream.value!) : null;
+  TOutput get value => _convert(_inputStream.value);
+
   @override
   bool get loaded => _inputStream.loaded;
 
@@ -37,7 +37,7 @@ extension StreamWithValueExtensions<TInput> on StreamWithValue<TInput> {
   StreamWithValue<TOutput> map<TOutput>(_Converter<TInput, TOutput> convert) =>
       _MappedStreamWithValue(this, convert);
 
-  Stream<TInput?> get valueWithUpdates async* {
+  Stream<TInput> get valueWithUpdates async* {
     if (loaded) {
       yield value;
     }
@@ -92,13 +92,9 @@ extension MapPerEvent<TInput> on Stream<TInput> {
 class StreamWithLatestValue<T> implements StreamWithValue<T> {
   late Stream<T> _stream;
   bool _hasLatestValue = false;
-  T? _latestValue;
+  late T _latestValue;
 
-  StreamWithLatestValue(Stream<T> sourceStream, {T? initialValue}) {
-    if (initialValue != null) {
-      _latestValue = initialValue;
-      _hasLatestValue = true;
-    }
+  StreamWithLatestValue(Stream<T> sourceStream) {
     _stream = sourceStream.mapPerEvent((value) {
       _latestValue = value;
       _hasLatestValue = true;
@@ -106,11 +102,22 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
     });
   }
 
+  factory StreamWithLatestValue.withInitialValue(
+    Stream<T> sourceStream, {
+    required T initialValue,
+  }) =>
+      StreamWithLatestValue(sourceStream)
+        .._latestValue = initialValue
+        .._hasLatestValue = true;
+
   @override
   Stream<T> get updates => _stream;
 
+  /// Must check [loaded] before attempting to read [value]. If the [value] is
+  /// not initialized (either through [withInitialValue] or stream event), an
+  /// exception will be thrown.
   @override
-  T? get value => _latestValue;
+  T get value => _latestValue;
 
   @override
   bool get loaded => _hasLatestValue;
@@ -123,13 +130,13 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
 class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
   final _controller = StreamController<T>.broadcast();
   bool _hasLatestValue = false;
-  T? _latestValue;
+  late T _latestValue;
 
-  PushStreamWithValue({T? initialValue}) {
-    if (initialValue != null) {
-      _latestValue = initialValue;
-      _hasLatestValue = true;
-    }
+  PushStreamWithValue();
+
+  PushStreamWithValue.withInitialValue(T initialValue) {
+    _latestValue = initialValue;
+    _hasLatestValue = true;
   }
 
   /// Push [data] to the stream and save it in [value].
@@ -150,6 +157,9 @@ class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
   @override
   Stream<T> get updates => _controller.stream;
 
+  /// Must check [loaded] before attempting to read [value]. If the [value] is
+  /// not initialized (either through [withInitialValue] or stream event), an
+  /// exception will be thrown.
   @override
-  T? get value => _latestValue;
+  T get value => _latestValue;
 }

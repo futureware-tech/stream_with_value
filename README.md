@@ -15,7 +15,7 @@ Stream and keeps the latest value that was received from it.
 
 ```yaml
 dependencies:
-  fw_stream_with_value: ^0.1.0
+  fw_stream_with_value: ^0.1.1
 ```
 
 2. Create StreamWithLatestValue
@@ -23,7 +23,7 @@ dependencies:
 ```dart
 StreamController<int> _yourStreamController = StreamController<int>();
 StreamWithLatestValue<int>  _streamWithValue =
-        StreamWithLatestValue<int>(_yourStreamController.stream, initialValue: 0);
+        StreamWithLatestValue<int>.withInitialValue(_yourStreamController.stream, initialValue: 0);
 
 ```
 

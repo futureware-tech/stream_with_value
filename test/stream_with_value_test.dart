@@ -50,7 +50,7 @@ void main() {
 
   group('StreamWithLatestValue', () {
     test('takes initialValue', () {
-      final sv = StreamWithLatestValue(
+      final sv = StreamWithLatestValue.withInitialValue(
         const Stream<int>.empty(),
         initialValue: 42,
       );
@@ -86,12 +86,12 @@ void main() {
       expect(sv.value, 1);
     });
 
-    test('recognizes null as loaded (except from initialValue)', () async {
-      final sv = StreamWithLatestValue(
+    test('recognizes null as loaded (even from initialValue)', () async {
+      final sv = StreamWithLatestValue.withInitialValue(
         Stream.fromIterable([0, null, 1]).asBroadcastStream(),
         initialValue: null,
       );
-      expect(sv.loaded, false);
+      expect(sv.loaded, true);
 
       expect(await sv.updates.first, 0);
       expect(sv.loaded, true);
@@ -111,7 +111,7 @@ void main() {
 
       await swv.updates.first;
       expect(mapped.loaded, true);
-      expect(mapped.value, swv.value! + 1);
+      expect(mapped.value, swv.value + 1);
     });
 
     test('relays updates', () async {

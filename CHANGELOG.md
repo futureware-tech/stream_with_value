@@ -1,3 +1,8 @@
+## 0.1.1
+
+- Improvements on null-safety implementation. Support `null` as an
+  initial value.
+
 ## 0.1.0
 
 - Add example on how to use package.

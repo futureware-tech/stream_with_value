@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:fw_stream_with_value/fw_stream_with_value.dart';
+import 'package:fw_stream_with_value/stream_with_value.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,8 +33,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    _streamWithValue =
-        StreamWithLatestValue(_counterStreamController.stream, initialValue: 0);
+    _streamWithValue = StreamWithLatestValue<int>.withInitialValue(
+        _counterStreamController.stream,
+        initialValue: 0);
     super.initState();
   }
 
