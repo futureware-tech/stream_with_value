@@ -1,3 +1,7 @@
+## Unreleased
+
+- Expand on description of the package as recommended by pub.dev.
+
 ## 0.1.1
 
 - Improvements on null-safety implementation. Support `null` as an
