@@ -165,7 +165,7 @@ class PushStreamWithValue<T> implements StreamWithValue<T>, EventSink<T> {
 
   /// Close the stream. After that, calls to [add] are no longer allowed.
   @override
-  void close() => _controller.close();
+  Future<void> close() => _controller.close();
 
   @override
   bool get loaded => _hasLatestValue;
