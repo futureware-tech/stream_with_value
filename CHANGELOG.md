@@ -5,6 +5,7 @@
 - Update README with details and little snippets.
 - Add more documentation in the code.
 - Implement `valueOrNull` extension (#2).
+- Fix example and add tests.
 
 ## 0.1.1
 

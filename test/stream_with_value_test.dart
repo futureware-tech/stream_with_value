@@ -101,6 +101,27 @@ void main() {
       expect(sv.loaded, true);
       expect(sv.value, null);
     });
+
+    test('pauses the original stream when updates subscription does', () async {
+      final source = StreamController<int>();
+      final sv = StreamWithLatestValue(source.stream);
+
+      final subscription = sv.updates.listen((event) {});
+      subscription.pause();
+      expect(source.isPaused, true);
+      subscription.resume();
+      expect(source.isPaused, false);
+      await subscription.cancel();
+      await source.close();
+    });
+
+    test('closes when the original stream is closed', () async {
+      final source = StreamController<int>();
+      final sv = StreamWithLatestValue(source.stream);
+      expectLater(sv.updates, emitsInOrder([42, emitsDone]));
+      source.add(42);
+      await source.close();
+    });
   });
 
   group('StreamWithValue.map extension', () {
@@ -118,6 +139,88 @@ void main() {
       final swv = StreamWithLatestValue<int>(Stream.fromIterable([1, 2, 3])),
           mapped = swv.map((x) => x + 1);
       expect(await mapped.updates.toList(), [2, 3, 4]);
+    });
+  });
+
+  group('StreamWithValue.valueOrNull extension', () {
+    test('valueOrNull', () async {
+      final swv = StreamWithLatestValue<int>(Stream.fromIterable([1, 2, 3]));
+      expect(swv.valueOrNull, null);
+      await swv.updates.first;
+      expect(swv.valueOrNull, 1);
+    });
+  });
+
+  group('StreamWithValue.valueWithUpdates extension', () {
+    test('emits stream directly if no initial value given', () async {
+      final swv = StreamWithLatestValue<int>(Stream.fromIterable([1, 2, 3]));
+      expect(await swv.valueWithUpdates.first, 1);
+    });
+
+    test('emits value first if given', () async {
+      final swv = StreamWithLatestValue<int>.withInitialValue(
+        Stream.fromIterable([1, 2, 3]),
+        initialValue: 42,
+      );
+      expect(await swv.valueWithUpdates.first, 42);
+    });
+  });
+
+  group('PushStreamWithValue', () {
+    test('takes initialValue', () {
+      final sv = PushStreamWithValue.withInitialValue(42);
+      expect(sv.loaded, true);
+      expect(sv.value, 42);
+      sv.close();
+    });
+
+    test('updates value on add()', () async {
+      final sv = PushStreamWithValue.withInitialValue(42);
+      expect(sv.loaded, true);
+      expect(sv.value, 42);
+
+      sv.add(43);
+      expect(sv.loaded, true);
+      expect(sv.value, 43);
+
+      sv.close();
+    });
+
+    test('is not loaded without initialValue', () async {
+      final sv = PushStreamWithValue();
+      expect(sv.loaded, false);
+
+      sv.add(42);
+      expect(sv.loaded, true);
+      expect(sv.value, 42);
+
+      sv.close();
+    });
+
+    test('recognizes null as loaded (even from initialValue)', () async {
+      final sv = PushStreamWithValue.withInitialValue(null);
+      expect(sv.loaded, true);
+      expect(sv.value, null);
+      sv.close();
+    });
+
+    test('relays add*() to updates', () async {
+      final sv = PushStreamWithValue();
+
+      expectLater(
+          sv.updates,
+          emitsInOrder([
+            42,
+            emitsError('Failure'),
+          ]));
+
+      sv.add(42);
+      expect(sv.loaded, true);
+      expect(sv.value, 42);
+
+      sv.addError('Failure');
+
+      await sv.close();
     });
   });
 }
