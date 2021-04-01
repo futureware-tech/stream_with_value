@@ -136,7 +136,7 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
 /// calls to [add]. This way, [value] is always set to the latest value that has
 /// been [add]ed, regardless of whether the [updates] are listened to (in
 /// contrast to [StreamWithLatestValue]).
-class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
+class PushStreamWithValue<T> implements StreamWithValue<T>, EventSink<T> {
   final _controller = StreamController<T>.broadcast();
   bool _hasLatestValue = false;
   late T _latestValue;
@@ -155,6 +155,10 @@ class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
     _hasLatestValue = true;
     _controller.add(data);
   }
+
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) =>
+      _controller.addError(error, stackTrace);
 
   /// Close the stream. After that, calls to [add] are no longer allowed.
   @override
