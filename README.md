@@ -1,5 +1,9 @@
 # stream_with_value
 
+[![pub package](https://img.shields.io/pub/v/stream_with_value.svg)](https://pub.dev/packages/stream_with_value)
+[![flutter build](https://github.com/futureware-tech/stream_with_value/workflows/flutter/badge.svg?branch=master&event=push)](https://github.com/futureware-tech/stream_with_value/actions?query=workflow%3Aflutter+branch%3Amaster)
+[![code coverage](https://codecov.io/gh/futureware-tech/stream_with_value/branch/master/graph/badge.svg)](https://codecov.io/gh/futureware-tech/stream_with_value)
+
 ## About
 
 The package provides the implementation of StreamWithValue that wraps a
