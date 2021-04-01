@@ -4,6 +4,7 @@
 - Remove binding to a specific version of `test` package.
 - Update README with details and little snippets.
 - Add more documentation in the code.
+- Implement `valueOrNull` extension (#2).
 
 ## 0.1.1
 
