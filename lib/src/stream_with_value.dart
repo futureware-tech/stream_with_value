@@ -50,6 +50,9 @@ extension StreamWithValueExtensions<TInput> on StreamWithValue<TInput> {
     }
     yield* updates;
   }
+
+  /// Returns `null` if [loaded] is `false`, otherwise returns [value].
+  TInput? get valueOrNull => loaded ? value : null;
 }
 
 extension MapPerEvent<TInput> on Stream<TInput> {
