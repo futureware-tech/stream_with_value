@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.0
 
 - Expand on description of the package as recommended by pub.dev.
 - Remove binding to a specific version of `test` package.
