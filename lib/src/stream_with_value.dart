@@ -1,7 +1,13 @@
 import 'dart:async';
 
+/// The base encapsulation for all the convenience implementations.
 abstract class StreamWithValue<T> {
+  /// The value associated with the [updates] stream, commonly the latest one.
+  /// Be sure to check [loaded] before accessing the value; otherwise it may not
+  /// be initialized yet, and accessing it will raise an exception.
   T get value;
+
+  /// Whether it's safe to access [value] (i.e. it is initialized).
   bool get loaded;
 
   /// Any changes to [value], in the form of a stream.
@@ -37,16 +43,20 @@ extension StreamWithValueExtensions<TInput> on StreamWithValue<TInput> {
   StreamWithValue<TOutput> map<TOutput>(_Converter<TInput, TOutput> convert) =>
       _MappedStreamWithValue(this, convert);
 
+  /// Yields [value] if it's [loaded], then relays to [updates].
   Stream<TInput> get valueWithUpdates async* {
     if (loaded) {
       yield value;
     }
     yield* updates;
   }
+
+  /// Returns `null` if [loaded] is `false`, otherwise returns [value].
+  TInput? get valueOrNull => loaded ? value : null;
 }
 
 extension MapPerEvent<TInput> on Stream<TInput> {
-  /// Like [map], but calls [convert] once per event, and not per listener.
+  /// Like [map], but calls [convert] once per event, and not per subscription.
   Stream<TOutput> mapPerEvent<TOutput>(_Converter<TInput, TOutput> convert) {
     late StreamController<TOutput> controller;
     late StreamSubscription<TInput> subscription;
@@ -102,6 +112,8 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
     });
   }
 
+  /// Set [value] to [initialValue] and flip [loaded] to `true` upon
+  /// construction.
   factory StreamWithLatestValue.withInitialValue(
     Stream<T> sourceStream, {
     required T initialValue,
@@ -126,8 +138,8 @@ class StreamWithLatestValue<T> implements StreamWithValue<T> {
 /// [StreamWithValue] implementation that creates a [Stream] from subsequent
 /// calls to [add]. This way, [value] is always set to the latest value that has
 /// been [add]ed, regardless of whether the [updates] are listened to (in
-/// contrast to [StreamWithLatestValue].
-class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
+/// contrast to [StreamWithLatestValue]).
+class PushStreamWithValue<T> implements StreamWithValue<T>, EventSink<T> {
   final _controller = StreamController<T>.broadcast();
   bool _hasLatestValue = false;
   late T _latestValue;
@@ -147,9 +159,13 @@ class PushStreamWithValue<T> implements StreamWithValue<T>, Sink<T> {
     _controller.add(data);
   }
 
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) =>
+      _controller.addError(error, stackTrace);
+
   /// Close the stream. After that, calls to [add] are no longer allowed.
   @override
-  void close() => _controller.close();
+  Future<void> close() => _controller.close();
 
   @override
   bool get loaded => _hasLatestValue;

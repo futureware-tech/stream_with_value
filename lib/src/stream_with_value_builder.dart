@@ -86,25 +86,28 @@ class _DataStreamWithValueBuilderState<T>
       }
     }
 
-    _streamSubscription = widget.streamWithValue.updates.listen((event) {
-      if (mounted) {
-        if (widget.onData != null) {
-          widget.onData!(event);
+    _streamSubscription = widget.streamWithValue.updates.listen(
+      (event) {
+        if (mounted) {
+          if (widget.onData != null) {
+            widget.onData!(event);
+          }
+          setState(() {
+            _currentValue = event;
+          });
         }
-        setState(() {
-          _currentValue = event;
-        });
-      }
-    }, onDone: () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    },
-        onError: (
-          dynamic e,
-          StackTrace stackTrace,
-        ) =>
-            widget.onError?.call(e, stackTrace));
+      },
+      onDone: () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      onError: (
+        dynamic e,
+        StackTrace stackTrace,
+      ) =>
+          widget.onError?.call(e, stackTrace),
+    );
   }
 
   @override

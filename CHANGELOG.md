@@ -1,3 +1,12 @@
+## 0.2.0
+
+- Expand on description of the package as recommended by pub.dev.
+- Remove binding to a specific version of `test` package.
+- Update README with details and little snippets.
+- Add more documentation in the code.
+- Implement `valueOrNull` extension (#2).
+- Fix example and add tests.
+
 ## 0.1.1
 
 - Improvements on null-safety implementation. Support `null` as an

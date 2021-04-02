@@ -1,6 +1,9 @@
 name: stream_with_value
-description: An encapsulation of a Stream and a single value.
-version: 0.1.1
+description: >
+  An encapsulation of Dart Stream<T>, a single variable of type T, and a bool
+  indicating whether value is loaded. Most commonly useful as a way of referring
+  to the latest or initial value of the Stream to avoid an asynchronous gap.
+version: 0.2.0
 homepage: https://futureware.dev
 
 environment:
@@ -14,4 +17,4 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  test: ^1.16.5
+  test:
