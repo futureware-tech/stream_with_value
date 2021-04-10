@@ -1,3 +1,7 @@
+## 0.2.0+1
+
+- Change package description to fit within pub.dev guidelines.
+
 ## 0.2.0
 
 - Expand on description of the package as recommended by pub.dev.
