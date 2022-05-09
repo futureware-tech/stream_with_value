@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   '$value',
                   style: Theme.of(context).textTheme.headline4,
                 ),
-                onData: (int newValue) {
+                onData: (newValue) {
                   print('New value arrived callback: $newValue');
                 },
                 nullValueBuilder: (BuildContext context) =>
