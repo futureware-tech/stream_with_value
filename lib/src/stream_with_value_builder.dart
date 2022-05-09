@@ -62,7 +62,8 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
     this.onData,
     this.nullValueBuilder = _noValueBuilder,
     this.onError,
-  }) : super(key: ValueKey(streamWithValue.updates));
+    Key? key,
+  }) : super(key: key);
 
   @override
   _DataStreamWithValueBuilderState<T> createState() =>
@@ -77,33 +78,19 @@ class _DataStreamWithValueBuilderState<T>
   @override
   void initState() {
     super.initState();
+    _processCurrentValueAndSubscribeToStream();
+  }
 
-    if (widget.streamWithValue.loaded) {
-      final value = widget.streamWithValue.value;
-      _currentValue = value;
-      if (widget.onData != null) {
-        scheduleMicrotask(() => widget.onData!(value));
-      }
+  @override
+  void didUpdateWidget(DataStreamWithValueBuilder<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.streamWithValue != widget.streamWithValue) {
+      _streamSubscription.cancel();
+      _processCurrentValueAndSubscribeToStream();
+    } else if (oldWidget.onError != widget.onError) {
+      _streamSubscription.onError(widget.onError);
     }
-
-    _streamSubscription = widget.streamWithValue.updates.listen(
-      (event) {
-        if (mounted) {
-          if (widget.onData != null) {
-            widget.onData!(event);
-          }
-          setState(() {
-            _currentValue = event;
-          });
-        }
-      },
-      onDone: () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      onError: widget.onError,
-    );
   }
 
   @override
@@ -118,4 +105,35 @@ class _DataStreamWithValueBuilderState<T>
           ? widget.nullValueBuilder(context)
           : widget.builder(context, _currentValue!)
       : _noValueBuilder(context);
+
+  void _processCurrentValueAndSubscribeToStream() {
+    if (widget.streamWithValue.loaded) {
+      final value = widget.streamWithValue.value;
+      _currentValue = value;
+      if (widget.onData != null) {
+        // Schedule a microtask in case onData calls for context, which is not
+        // allowed in e.g. initState.
+        scheduleMicrotask(() => widget.onData!(value));
+      }
+    } else {
+      _currentValue = null;
+    }
+
+    _streamSubscription = widget.streamWithValue.updates.listen(
+      (event) {
+        if (mounted) {
+          widget.onData?.call(event);
+          setState(() {
+            _currentValue = event;
+          });
+        }
+      },
+      onDone: () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      onError: widget.onError,
+    );
+  }
 }

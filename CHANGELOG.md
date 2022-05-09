@@ -2,6 +2,8 @@
 
 - Widget builder: forward stream errors to the default handler when no `onError`
   callback is specified.
+- Widget builder: correctly rebuild, and update state and configuration on
+  widget updates.
 
 ## 0.2.0+1
 
