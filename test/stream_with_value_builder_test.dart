@@ -87,7 +87,7 @@ void main() {
     testWidgets('onData / onError callbacks', (WidgetTester tester) async {
       final controller = StreamController<int>();
       final sv = StreamWithLatestValue<int>(controller.stream);
-      final data = <int>[];
+      final data = <int?>[];
       final errors = <dynamic>[];
       await tester.pumpWidget(MaterialApp(
         home: DataStreamWithValueBuilder(
@@ -118,7 +118,7 @@ void main() {
     testWidgets('onData triggered when already initialized',
         (WidgetTester tester) async {
       final sv = PushStreamWithValue<int>.withInitialValue(42);
-      final data = <int>[];
+      final data = <int?>[];
       await tester.pumpWidget(MaterialApp(
         home: DataStreamWithValueBuilder(
           streamWithValue: sv,
@@ -129,6 +129,87 @@ void main() {
       expect(find.text('42'), findsOneWidget);
       expect(data, [42]);
       await tester.runAsync(sv.close);
+    });
+
+    testWidgets('Widget is rebuilt with new stream when it is updated',
+        (WidgetTester tester) async {
+      final swvHello = PushStreamWithValue<String>.withInitialValue('Hello');
+      final currentSWV = ValueNotifier<StreamWithValue<String>>(swvHello);
+      final dataRecorder = <String?>[];
+
+      await tester.pumpWidget(MaterialApp(
+        home: ValueListenableBuilder<StreamWithValue<String>>(
+          valueListenable: currentSWV,
+          builder: (context, swv, child) => DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            builder: (context, data) => Text(data.toString()),
+            onData: dataRecorder.add,
+          ),
+        ),
+      ));
+      expect(find.text('Hello'), findsOneWidget);
+      expect(dataRecorder, ['Hello']);
+
+      final swvBye = PushStreamWithValue<String>.withInitialValue('Bye');
+      currentSWV.value = swvBye;
+      await tester.pump();
+      expect(find.text('Bye'), findsOneWidget);
+      expect(dataRecorder, ['Hello', 'Bye']);
+
+      swvBye.add('Goodbye!');
+      // Unlike this test, our stream is truly asynchronous: wait for the value
+      // addition to propagade before trying to trigger the next frame.
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Goodbye!'), findsOneWidget);
+      expect(dataRecorder, ['Hello', 'Bye', 'Goodbye!']);
+
+      await tester.runAsync(swvHello.close);
+      await tester.runAsync(swvBye.close);
+    });
+
+    testWidgets('onError handler can be replaced', (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String>.withInitialValue('Hello');
+      final caughtErrors = [], uncaughtErrors = [];
+      final errorHandler = ValueNotifier<void Function(dynamic, StackTrace)?>(
+        (error, stack) => caughtErrors.add(error),
+      );
+
+      // The errors are propagated from the Stream.listen call, i.e. on the
+      // initial widget build.  That's where we should install the zone handler.
+      await runZonedGuarded(
+        () => tester.pumpWidget(
+          MaterialApp(
+            home: ValueListenableBuilder<void Function(dynamic, StackTrace)?>(
+              valueListenable: errorHandler,
+              builder: (context, onError, child) => DataStreamWithValueBuilder(
+                streamWithValue: swv,
+                builder: (context, data) => Text(data.toString()),
+                onError: onError,
+              ),
+            ),
+          ),
+        ),
+        (error, stack) {
+          uncaughtErrors.add(error);
+        },
+      );
+
+      swv.addError(Exception('This should be caught by callback'));
+      await tester.runAsync(pumpEventQueue);
+      expect(caughtErrors.length, 1);
+      expect(caughtErrors[0], isA<Exception>());
+      expect(uncaughtErrors, isEmpty);
+
+      errorHandler.value = null;
+      await tester.pump();
+      swv.addError(Exception('This will be propagated to default handler'));
+      await tester.runAsync(pumpEventQueue);
+      expect(caughtErrors.length, 1);
+      expect(uncaughtErrors.length, 1);
+      expect(uncaughtErrors[0], isA<Exception>());
+
+      await tester.runAsync(swv.close);
     });
   });
 }

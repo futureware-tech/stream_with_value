@@ -42,7 +42,9 @@ void main() {
     test('non-broadcast stream', () {
       final emptyStream = Stream.fromIterable([0]).mapPerEvent((event) => null);
       expect(
-        () => emptyStream..listen(((value) => null))..listen(((value) => null)),
+        () => emptyStream
+          ..listen(((value) => null))
+          ..listen(((value) => null)),
         throwsA(const TypeMatcher<StateError>()),
       );
     });

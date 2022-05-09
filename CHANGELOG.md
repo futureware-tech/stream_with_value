@@ -1,3 +1,12 @@
+## 0.3.0
+
+- Widget builder: forward stream errors to the default handler when no `onError`
+  callback is specified.
+- Widget builder: correctly rebuild, and update state and configuration on
+  widget updates.
+- Widget builder: *breaking*: take non-nullable type `T` as a generic argument,
+  and provide explicit guarantees on `builder()` parameter type.
+
 ## 0.2.0+1
 
 - Change package description to fit within pub.dev guidelines.
