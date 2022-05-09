@@ -167,5 +167,49 @@ void main() {
       await tester.runAsync(swvHello.close);
       await tester.runAsync(swvBye.close);
     });
+
+    testWidgets('onError handler can be replaced', (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String>.withInitialValue('Hello');
+      final caughtErrors = [], uncaughtErrors = [];
+      final errorHandler = ValueNotifier<void Function(dynamic, StackTrace)?>(
+        (error, stack) => caughtErrors.add(error),
+      );
+
+      // The errors are propagated from the Stream.listen call, i.e. on the
+      // initial widget build.  That's where we should install the zone handler.
+      await runZonedGuarded(
+        () => tester.pumpWidget(
+          MaterialApp(
+            home: ValueListenableBuilder<void Function(dynamic, StackTrace)?>(
+              valueListenable: errorHandler,
+              builder: (context, onError, child) => DataStreamWithValueBuilder(
+                streamWithValue: swv,
+                builder: (context, data) => Text(data.toString()),
+                onError: onError,
+              ),
+            ),
+          ),
+        ),
+        (error, stack) {
+          uncaughtErrors.add(error);
+        },
+      );
+
+      swv.addError(Exception('This should be caught by callback'));
+      await tester.runAsync(pumpEventQueue);
+      expect(caughtErrors.length, 1);
+      expect(caughtErrors[0], isA<Exception>());
+      expect(uncaughtErrors, isEmpty);
+
+      errorHandler.value = null;
+      await tester.pump();
+      swv.addError(Exception('This will be propagated to default handler'));
+      await tester.runAsync(pumpEventQueue);
+      expect(caughtErrors.length, 1);
+      expect(uncaughtErrors.length, 1);
+      expect(uncaughtErrors[0], isA<Exception>());
+
+      await tester.runAsync(swv.close);
+    });
   });
 }

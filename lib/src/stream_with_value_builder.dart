@@ -102,11 +102,7 @@ class _DataStreamWithValueBuilderState<T>
           Navigator.of(context).pop();
         }
       },
-      onError: (
-        dynamic e,
-        StackTrace stackTrace,
-      ) =>
-          widget.onError?.call(e, stackTrace),
+      onError: widget.onError,
     );
   }
 
