@@ -1,3 +1,10 @@
+## 0.3.0
+
+- Widget builder: breaking: take non-nullable type `T` as a generic argument,
+  and provide explicit guarantees on `build()` parameter type.
+- Widget builder: forward stream errors to Flutter when no `onError` callback is
+  specified.
+
 ## 0.2.0+1
 
 - Change package description to fit within pub.dev guidelines.
