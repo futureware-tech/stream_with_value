@@ -106,7 +106,17 @@ class _DataStreamWithValueBuilderState<T>
         dynamic e,
         StackTrace stackTrace,
       ) =>
-          widget.onError?.call(e, stackTrace),
+          widget.onError == null
+              ? FlutterError.reportError(FlutterErrorDetails(
+                  exception: e,
+                  stack: stackTrace,
+                  library: 'stream_with_value',
+                  context: ErrorDescription(
+                    'Unhandled (no onError callback supplied) error event from '
+                    'the stream in DataStreamWithValueBuilder',
+                  ),
+                ))
+              : widget.onError!(e, stackTrace),
     );
   }
 
