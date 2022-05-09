@@ -130,5 +130,42 @@ void main() {
       expect(data, [42]);
       await tester.runAsync(sv.close);
     });
+
+    testWidgets('Widget is rebuilt with new stream when it is updated',
+        (WidgetTester tester) async {
+      final swvHello = PushStreamWithValue<String>.withInitialValue('Hello');
+      final currentSWV = ValueNotifier<StreamWithValue<String>>(swvHello);
+      final dataRecorder = <String?>[];
+
+      await tester.pumpWidget(MaterialApp(
+        home: ValueListenableBuilder<StreamWithValue<String>>(
+          valueListenable: currentSWV,
+          builder: (context, swv, child) => DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            builder: (context, data) => Text(data.toString()),
+            onData: dataRecorder.add,
+          ),
+        ),
+      ));
+      expect(find.text('Hello'), findsOneWidget);
+      expect(dataRecorder, ['Hello']);
+
+      final swvBye = PushStreamWithValue<String>.withInitialValue('Bye');
+      currentSWV.value = swvBye;
+      await tester.pump();
+      expect(find.text('Bye'), findsOneWidget);
+      expect(dataRecorder, ['Hello', 'Bye']);
+
+      swvBye.add('Goodbye!');
+      // Unlike this test, our stream is truly asynchronous: wait for the value
+      // addition to propagade before trying to trigger the next frame.
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Goodbye!'), findsOneWidget);
+      expect(dataRecorder, ['Hello', 'Bye', 'Goodbye!']);
+
+      await tester.runAsync(swvHello.close);
+      await tester.runAsync(swvBye.close);
+    });
   });
 }
