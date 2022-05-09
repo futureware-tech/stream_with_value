@@ -32,15 +32,18 @@ class _StreamBuilderWithValueState<T> extends State<StreamBuilderWithValue<T>> {
 }
 
 typedef DataTrigger<T> = void Function(T newValue);
-typedef DataBuilder<T> = Widget Function(BuildContext context, T value);
+typedef DataBuilder<T extends Object> = Widget Function(
+    BuildContext context, T value);
 typedef NullValueBuilder = Widget Function(BuildContext context);
 
 Widget _noValueBuilder(BuildContext context) =>
     const Center(child: CircularProgressIndicator());
 
-class DataStreamWithValueBuilder<T> extends StatefulWidget {
-  /// Source [StreamWithValue].
-  final StreamWithValue<T> streamWithValue;
+class DataStreamWithValueBuilder<T extends Object> extends StatefulWidget {
+  /// Source [StreamWithValue]. We accept a nullable type here to be able to
+  /// filter out nulls without requiring the user to pass nullable type as [T]
+  /// and then using exclamation mark operator in the builder body.
+  final StreamWithValue<T?> streamWithValue;
 
   /// Builds a child widget. Never gets `null` as a value.
   final DataBuilder<T> builder;
@@ -51,7 +54,7 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
 
   /// Called for every change to the data. May be called with `null` if [T] is
   /// a nullable type.
-  final DataTrigger<T>? onData;
+  final DataTrigger<T?>? onData;
 
   /// Called when errors happen with the Stream
   final void Function(dynamic e, StackTrace stackTrace)? onError;
@@ -70,9 +73,9 @@ class DataStreamWithValueBuilder<T> extends StatefulWidget {
       _DataStreamWithValueBuilderState<T>();
 }
 
-class _DataStreamWithValueBuilderState<T>
+class _DataStreamWithValueBuilderState<T extends Object>
     extends State<DataStreamWithValueBuilder<T>> {
-  late StreamSubscription<T> _streamSubscription;
+  late StreamSubscription<T?> _streamSubscription;
   T? _currentValue;
 
   @override
