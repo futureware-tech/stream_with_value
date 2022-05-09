@@ -1,4 +1,4 @@
-## Unreleased
+## 0.3.0
 
 - Widget builder: forward stream errors to the default handler when no `onError`
   callback is specified.
