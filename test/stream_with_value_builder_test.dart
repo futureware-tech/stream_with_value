@@ -87,7 +87,7 @@ void main() {
     testWidgets('onData / onError callbacks', (WidgetTester tester) async {
       final controller = StreamController<int>();
       final sv = StreamWithLatestValue<int>(controller.stream);
-      final data = <int>[];
+      final data = <int?>[];
       final errors = <dynamic>[];
       await tester.pumpWidget(MaterialApp(
         home: DataStreamWithValueBuilder(
@@ -118,7 +118,7 @@ void main() {
     testWidgets('onData triggered when already initialized',
         (WidgetTester tester) async {
       final sv = PushStreamWithValue<int>.withInitialValue(42);
-      final data = <int>[];
+      final data = <int?>[];
       await tester.pumpWidget(MaterialApp(
         home: DataStreamWithValueBuilder(
           streamWithValue: sv,
