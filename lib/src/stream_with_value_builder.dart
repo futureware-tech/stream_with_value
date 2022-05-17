@@ -48,9 +48,9 @@ class DataStreamWithValueBuilder<T extends Object> extends StatefulWidget {
   /// Builds a child widget. Never gets `null` as a value.
   final DataBuilder<T> builder;
 
-  /// Builds a child widget when data is `null` (for nullable [T]) or not
-  /// loaded.
-  final NullValueBuilder nullValueBuilder;
+  /// Builds a child widget when data is `null` (for nullable [T]). If unset,
+  /// updates with `null` values are ignored.
+  final NullValueBuilder? nullValueBuilder;
 
   /// Called for every change to the data. May be called with `null` if [T] is
   /// a nullable type.
@@ -63,7 +63,7 @@ class DataStreamWithValueBuilder<T extends Object> extends StatefulWidget {
     required this.streamWithValue,
     required this.builder,
     this.onData,
-    this.nullValueBuilder = _noValueBuilder,
+    this.nullValueBuilder,
     this.onError,
     Key? key,
   }) : super(key: key);
@@ -105,7 +105,11 @@ class _DataStreamWithValueBuilderState<T extends Object>
   @override
   Widget build(BuildContext context) => widget.streamWithValue.loaded
       ? _currentValue == null
-          ? widget.nullValueBuilder(context)
+          // In theory, it may happen that _currentValue is null and at the same
+          // time, nullValueBuilder is unset (for example, widget params were
+          // updated while null has been passed from the source stream). In
+          // practice, do the best we can (except crashing).
+          ? (widget.nullValueBuilder ?? _noValueBuilder)(context)
           : widget.builder(context, _currentValue!)
       : _noValueBuilder(context);
 
@@ -126,9 +130,12 @@ class _DataStreamWithValueBuilderState<T extends Object>
       (event) {
         if (mounted) {
           widget.onData?.call(event);
-          setState(() {
-            _currentValue = event;
-          });
+          // Ignore null events if nullValueBuilder isn't set.
+          if (event != null || widget.nullValueBuilder != null) {
+            setState(() {
+              _currentValue = event;
+            });
+          }
         }
       },
       onDone: () {

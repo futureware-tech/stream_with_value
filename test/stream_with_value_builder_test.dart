@@ -32,7 +32,8 @@ void main() {
   });
 
   group('DataStreamWithValueBuilder', () {
-    testWidgets('builder', (WidgetTester tester) async {
+    testWidgets('correctly builds loading screen or calls builder',
+        (WidgetTester tester) async {
       final sv = PushStreamWithValue<int?>();
       await tester.pumpWidget(MaterialApp(
         home: DataStreamWithValueBuilder(
@@ -50,21 +51,11 @@ void main() {
       await tester.pump();
       expect(find.text('43'), findsOneWidget);
 
-      sv.add(null);
-      // Duration workaround for https://github.com/flutter/flutter/issues/79565
-      await tester.pump(const Duration(milliseconds: 1));
-      expect(find.text('43'), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      sv.add(44);
-      await tester.pump();
-      expect(find.text('44'), findsOneWidget);
-
       await tester.runAsync(sv.close);
       // After closure, DataStreamWithValueBuilder calls Navigator.pop. This
       // needs pumpAndSettle and afterwards, no widgets will remain.
       await tester.pumpAndSettle();
-      expect(find.text('44'), findsNothing);
+      expect(find.text('43'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
@@ -208,6 +199,116 @@ void main() {
       expect(caughtErrors.length, 1);
       expect(uncaughtErrors.length, 1);
       expect(uncaughtErrors[0], isA<Exception>());
+
+      await tester.runAsync(swv.close);
+    });
+
+    testWidgets('null values are ignored when nullValueBuilder is unset',
+        (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String?>.withInitialValue('Hello');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            builder: (context, data) => Text(data.toString()),
+          ),
+        ),
+      );
+      expect(find.text('Hello'), findsOneWidget);
+
+      swv.add(null);
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Hello'), findsOneWidget);
+
+      swv.add('Bye!');
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Hello'), findsNothing);
+      expect(find.text('Bye!'), findsOneWidget);
+
+      await tester.runAsync(swv.close);
+    });
+
+    testWidgets('null values (including init) are built with nullValueBuilder',
+        (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String?>.withInitialValue(null);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            builder: (context, data) => Text(data.toString()),
+            nullValueBuilder: (context) => Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      swv.add(null);
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      swv.add('Hello');
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Hello'), findsOneWidget);
+
+      swv.add(null);
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Hello'), findsNothing);
+
+      await tester.runAsync(swv.close);
+    });
+
+    testWidgets('recovers after null when rebuilt with nullValueBuilder unset',
+        (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String?>.withInitialValue('Hello');
+      final currentNullValueBuilder = ValueNotifier<NullValueBuilder?>(
+        (_) => Text('null!'),
+      );
+
+      await tester.pumpWidget(MaterialApp(
+        home: ValueListenableBuilder<NullValueBuilder?>(
+          valueListenable: currentNullValueBuilder,
+          builder: (context, nullValueBuilder, child) =>
+              DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            nullValueBuilder: nullValueBuilder,
+            builder: (context, data) => Text(data.toString()),
+          ),
+        ),
+      ));
+      expect(find.text('Hello'), findsOneWidget);
+
+      swv.add(null);
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('null!'), findsOneWidget);
+
+      currentNullValueBuilder.value = null;
+      await tester.pump();
+      expect(find.text('null!'), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      swv.add('Bye!');
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Bye!'), findsOneWidget);
+
+      // This null should be ignored since we unset nullValueBuilder.
+      swv.add(null);
+      await tester.runAsync(pumpEventQueue);
+      await tester.pump();
+      expect(find.text('Bye!'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
 
       await tester.runAsync(swv.close);
     });
