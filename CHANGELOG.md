@@ -1,3 +1,7 @@
+## 0.4.0
+
+- Widget builder: ignore `null` values when `nullValueBuilder` is unset.
+
 ## 0.3.0
 
 - Widget builder: forward stream errors to the default handler when no `onError`
