@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add link at pub.dev back to the GitHub repository.
+
 ## 0.4.0
 
 - Widget builder: ignore `null` values when `nullValueBuilder` is unset.
