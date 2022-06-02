@@ -1,3 +1,9 @@
+## 0.5.0
+
+- Add link at pub.dev back to the GitHub repository.
+- Widget builder: do not pop more than necessary routes when the underlying
+  stream is closed.
+
 ## 0.4.0
 
 - Widget builder: ignore `null` values when `nullValueBuilder` is unset.
