@@ -2,7 +2,7 @@ name: stream_with_value
 description: >
   An encapsulation of a Stream<T>, a single variable of type T, and a bool
   indicating whether value is loaded
-version: 0.4.0
+version: 0.5.0
 homepage: https://futureware.dev
 repository: https://github.com/futureware-tech/stream_with_value
 
