@@ -312,5 +312,71 @@ void main() {
 
       await tester.runAsync(swv.close);
     });
+
+    testWidgets('does not pop the same route more than once',
+        (WidgetTester tester) async {
+      final swv = PushStreamWithValue<String>.withInitialValue('Hello');
+
+      await tester.pumpWidget(MaterialApp(
+        home: _ExtraRoutePusher(
+          child: DataStreamWithValueBuilder(
+            streamWithValue: swv,
+            builder: (context, data) => DataStreamWithValueBuilder(
+              streamWithValue: swv,
+              builder: (context, data) => Text(data.toString()),
+            ),
+          ),
+        ),
+      ));
+
+      expect(find.text('First widget'), findsOneWidget);
+
+      // Push that extra route (with animation).
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hello'), findsOneWidget);
+
+      await tester.runAsync(swv.close);
+      // Wait until the route is popped (with animation).
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hello'), findsNothing);
+      // First widget still there.
+      expect(find.text('First widget'), findsOneWidget);
+    });
   });
+}
+
+class _ExtraRoutePusher extends StatefulWidget {
+  final Widget child;
+
+  const _ExtraRoutePusher({required this.child, Key? key}) : super(key: key);
+
+  @override
+  State<_ExtraRoutePusher> createState() => _ExtraRoutePusherState();
+}
+
+/// This allows a value of type T or T?
+/// to be treated as a value of type T?.
+///
+/// We use this so that APIs that have become
+/// non-nullable can still be used with `!` and `?`
+/// to support older versions of the API as well.
+///
+/// https://docs.flutter.dev/development/tools/sdk/release-notes/release-notes-3.0.0#if-you-see-warnings-about-bindings
+T? _ambiguate<T>(T value) => value;
+
+class _ExtraRoutePusherState extends State<_ExtraRoutePusher> {
+  @override
+  void initState() {
+    super.initState();
+    _ambiguate(WidgetsBinding.instance)!.addPostFrameCallback((_) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => widget.child),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(body: Text('First widget'));
 }

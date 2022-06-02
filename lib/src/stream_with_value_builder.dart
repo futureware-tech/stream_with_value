@@ -73,15 +73,67 @@ class DataStreamWithValueBuilder<T extends Object> extends StatefulWidget {
       _DataStreamWithValueBuilderState<T>();
 }
 
+/// Tracks a list of owners per resource. Owners can be added and removed, but
+/// at any time at most one registered owner will have [isOwner] equal to
+/// `true`.
+class _SingleOwnerMap<TResource, TOwner> {
+  final _owners = <TResource, Set<TOwner>>{};
+
+  /// Track [owner] as one of the owners for [resource]. The caller must make
+  /// sure to call [removeOwner] when it no longer owns the resource.
+  void addOwner(TResource? resource, TOwner owner) {
+    if (resource != null) {
+      (_owners[resource] ??= {}).add(owner);
+    }
+  }
+
+  /// Whether [owner] is the current "designated" owner of [resource]. This may
+  /// change with calls to [addOwner] and [removeOwner]. No ordering is
+  /// guaranteed.
+  bool isOwner(TResource? resource, TOwner owner) =>
+      resource != null && _owners[resource]?.first == owner;
+
+  /// Remove [owner] for [resource]. If [resource] has no owners afterwards, the
+  /// entry is cleared so that [resource] can be garbage collected.
+  void removeOwner(TResource? resource, TOwner owner) {
+    if (resource != null) {
+      final resourceOwners = _owners[resource];
+      if (resourceOwners != null) {
+        resourceOwners.remove(owner);
+        if (resourceOwners.isEmpty) {
+          _owners.remove(resource);
+        }
+      }
+    }
+  }
+}
+
 class _DataStreamWithValueBuilderState<T extends Object>
     extends State<DataStreamWithValueBuilder<T>> {
   late StreamSubscription<T?> _streamSubscription;
   T? _currentValue;
+  ModalRoute? _handledRoute;
+
+  /// Track "ownership" of each route to avoid calling [Navigator.pop] more than
+  /// once under the same route, which would result in popping more routes than
+  /// necessary. This would occur if there's more than one
+  /// [DataStreamWithValueBuilder] under the same route.
+  static final _routePopHandlers =
+      _SingleOwnerMap<ModalRoute, _DataStreamWithValueBuilderState>();
 
   @override
   void initState() {
     super.initState();
     _processCurrentValueAndSubscribeToStream();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    _routePopHandlers.removeOwner(_handledRoute, this);
+    _handledRoute = ModalRoute.of(context);
+    _routePopHandlers.addOwner(_handledRoute, this);
   }
 
   @override
@@ -99,6 +151,7 @@ class _DataStreamWithValueBuilderState<T extends Object>
   @override
   void dispose() {
     _streamSubscription.cancel();
+    _routePopHandlers.removeOwner(_handledRoute, this);
     super.dispose();
   }
 
@@ -140,7 +193,10 @@ class _DataStreamWithValueBuilderState<T extends Object>
       },
       onDone: () {
         if (mounted) {
-          Navigator.of(context).pop();
+          final route = ModalRoute.of(context);
+          if (_routePopHandlers.isOwner(route, this)) {
+            Navigator.of(context).pop();
+          }
         }
       },
       onError: widget.onError,
